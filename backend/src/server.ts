@@ -1,9 +1,11 @@
 import "dotenv/config";
 import express from "express";
-import pool from "./db.js";
+import pool from "./db/db.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
 
 const app = express();
 app.use(express.json());
+app.use("/api/applications", applicationRoutes);
 
 app.get("/", (req, res) => {
     res.send("DevTrack API is running");
