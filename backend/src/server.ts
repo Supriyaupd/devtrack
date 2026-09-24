@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import pool from "./db/db.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 import { logger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -10,13 +11,14 @@ const app = express();
 app.use(express.json());
 app.use(logger);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
-    res.send("DevTrack API is running");
+  res.send("DevTrack API is running");
 });
 
 app.get("/api/health", (req, res) => {
-    res.send("DevTrack API is healthy");
+  res.send("DevTrack API is healthy");
 });
 
 app.use(errorHandler);
@@ -30,5 +32,5 @@ pool.query("SELECT NOW()")
   });
 
 app.listen(process.env.PORT, () => {
-    console.log("DevTrack API is running on port 3000");
+  console.log("DevTrack API is running on port 3000");
 });
