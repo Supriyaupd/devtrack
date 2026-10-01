@@ -1,5 +1,8 @@
 import pool from "../db/db.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+const jwtSecret = process.env.JWT_SECRET;
 
 export const registerUser = async (
   name: string,
@@ -50,10 +53,16 @@ export const loginUser = async (
   if (!passwordMatch) {
     throw new Error("Invalid email or password");
   }
+    const token = jwt.sign(
+  { userId: user.id },
+  jwtSecret as string,
+  { expiresIn: "1h" }
+);
 
   return {
     id: user.id,
     name: user.name,
     email: user.email,
+    token,
   };
 };

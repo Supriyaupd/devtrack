@@ -1,8 +1,9 @@
 import pool from "../db/db.js";
 
-export const getAllApplications = async () => {
+export const getAllApplications = async (userId: number) => {
   const result = await pool.query(
-    "SELECT * FROM applications ORDER BY created_at DESC"
+    "SELECT * FROM applications WHERE user_id = $1 ORDER BY created_at DESC",
+    [userId]
   );
 
   return result.rows;
