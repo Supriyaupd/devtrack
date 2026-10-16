@@ -18,12 +18,18 @@ export const createApplicationHandler = async (
 ) => {
   const { company, position, status } = req.body;
 
-  if (!company || !position || !status) {
+  if (
+    typeof company !== "string" ||
+    typeof position !== "string" ||
+    typeof status !== "string" ||
+    !company.trim() ||
+    !position.trim() ||
+    !status.trim()
+  ) {
     return res.status(400).json({
-      message: "Missing required fields"
+      message: "Company, position and status are required"
     });
   }
-
   const application = await createApplication(
     company,
     position,

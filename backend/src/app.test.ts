@@ -251,22 +251,6 @@ describe("POST /api/applications authentication", () => {
 });
 
 
-describe("POST /api/applications authentication", () => {
-  it("returns 401 when token is missing", async () => {
-    const response = await request(app)
-      .post("/api/applications")
-      .send({
-        company: "Google",
-        position: "Software Engineer",
-        status: "applied",
-      });
-
-    expect(response.status).toBe(401);
-    expect(response.body.message).toBe("Authentication required");
-  });
-});
-
-
 describe("Application user isolation", () => {
   it("does not return another user's applications", async () => {
     const userA = {
@@ -310,3 +294,31 @@ describe("Application user isolation", () => {
   });
 });
 
+describe("POST /api/applications validation", () => {
+  it("returns 400 when fields contain only whitespace", async () => {
+    const email = `validation${Date.now()}@example.com`;
+    const password = "Test123";
+
+    await request(app)
+      .post("/api/auth/register")
+      .send({ name: "Validation User", email, password });
+
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ email, password });
+
+    const response = await request(app)
+      .post("/api/applications")
+      .set("Authorization", `Bearer ${login.body.token}`)
+      .send({
+        company: "   ",
+        position: "Software Engineer",
+        status: "applied",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      "Company, position and status are required"
+    );
+  });
+});
