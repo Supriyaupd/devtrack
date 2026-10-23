@@ -3,6 +3,7 @@ import './App.css'
 import { useEffect, useState } from 'react'
 import {
   createApplication,
+  deleteApplication,
   getApplications,
   loginUser,
   registerUser,
@@ -81,6 +82,32 @@ function App() {
         error instanceof Error
           ? error.message
           : 'Failed to save application'
+      )
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!token) return
+
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this application?'
+    )
+
+    if (!confirmed) return
+
+    setApplicationError('')
+
+    try {
+      await deleteApplication(token, id)
+
+      setApplications((current) =>
+        current.filter((app) => app.id !== id)
+      )
+    } catch (error) {
+      setApplicationError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete application'
       )
     }
   }
@@ -258,6 +285,10 @@ function App() {
             </section>
           )}
 
+          {applicationError && !showForm && (
+            <p role="alert">{applicationError}</p>
+          )}
+
           <section className="summary">
             <article>
               <h2>Total Applications</h2>
@@ -297,6 +328,7 @@ function App() {
                   <h3>{app.company}</h3>
                   <p>{app.position}</p>
                   <p>Status: {app.status}</p>
+
                   <button
                     onClick={() => {
                       setEditingApplication(app)
@@ -305,6 +337,10 @@ function App() {
                     }}
                   >
                     Edit
+                  </button>
+
+                  <button onClick={() => handleDelete(app.id)}>
+                    Delete
                   </button>
                 </article>
               ))

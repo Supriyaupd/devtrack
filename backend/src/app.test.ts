@@ -370,3 +370,114 @@ describe("PUT /api/applications/:id", () => {
     expect(response.body.data.status).toBe("interview");
   });
 });
+
+
+describe("DELETE /api/applications/:id", () => {
+  it("deletes an application belonging to the authenticated user", async () => {
+    const email = `delete${Date.now()}@example.com`;
+    const password = "Test123";
+
+    await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "Delete Test User",
+        email,
+        password,
+      });
+
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ email, password });
+
+    const token = login.body.token;
+
+    const created = await request(app)
+      .post("/api/applications")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        company: "Google",
+        position: "Software Engineer",
+        status: "applied",
+      });
+
+    const applicationId = created.body.data.id;
+
+    const response = await request(app)
+      .delete(`/api/applications/${applicationId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Application deleted");
+
+    const applications = await request(app)
+      .get("/api/applications")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(applications.body.data).toEqual([]);
+  });
+
+  it("does not delete another user's application", async () => {
+    const password = "Test123";
+    const emailA = `owner${Date.now()}@example.com`;
+    const emailB = `other${Date.now()}@example.com`;
+
+    await request(app)
+      .post("/api/auth/register")
+      .send({ name: "Owner", email: emailA, password });
+
+    await request(app)
+      .post("/api/auth/register")
+      .send({ name: "Other User", email: emailB, password });
+
+    const loginA = await request(app)
+      .post("/api/auth/login")
+      .send({ email: emailA, password });
+
+    const loginB = await request(app)
+      .post("/api/auth/login")
+      .send({ email: emailB, password });
+
+    const created = await request(app)
+      .post("/api/applications")
+      .set("Authorization", `Bearer ${loginA.body.token}`)
+      .send({
+        company: "Google",
+        position: "Software Engineer",
+        status: "applied",
+      });
+
+    const applicationId = created.body.data.id;
+
+    const response = await request(app)
+      .delete(`/api/applications/${applicationId}`)
+      .set("Authorization", `Bearer ${loginB.body.token}`);
+
+    expect(response.status).toBe(404);
+
+    const ownerApplications = await request(app)
+      .get("/api/applications")
+      .set("Authorization", `Bearer ${loginA.body.token}`);
+
+    expect(ownerApplications.body.data).toHaveLength(1);
+  });
+
+  it("returns 400 for an invalid application ID", async () => {
+    const email = `invaliddelete${Date.now()}@example.com`;
+    const password = "Test123";
+
+    await request(app)
+      .post("/api/auth/register")
+      .send({ name: "Test User", email, password });
+
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ email, password });
+
+    const response = await request(app)
+      .delete("/api/applications/abc")
+      .set("Authorization", `Bearer ${login.body.token}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Invalid application ID");
+  });
+});

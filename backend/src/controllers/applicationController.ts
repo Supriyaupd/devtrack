@@ -2,7 +2,8 @@ import type { Request, Response } from "express";
 import {
   getAllApplications,
   createApplication,
-  updateApplication
+  updateApplication,
+  deleteApplication
 } from "../services/applicationService.js";
 
 export const getApplications = async (req: Request, res: Response) => {
@@ -31,10 +32,11 @@ export const createApplicationHandler = async (
       message: "Company, position and status are required"
     });
   }
+
   const application = await createApplication(
-    company,
-    position,
-    status,
+    company.trim(),
+    position.trim(),
+    status.trim(),
     req.userId!
   );
 
@@ -42,8 +44,7 @@ export const createApplicationHandler = async (
     message: "Application created",
     data: application
   });
-}; 
-
+};
 
 export const updateApplicationHandler = async (
   req: Request,
@@ -87,6 +88,32 @@ export const updateApplicationHandler = async (
 
   res.status(200).json({
     message: "Application updated",
+    data: application
+  });
+};
+
+export const deleteApplicationHandler = async (
+  req: Request,
+  res: Response
+) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({
+      message: "Invalid application ID"
+    });
+  }
+
+  const application = await deleteApplication(id, req.userId!);
+
+  if (!application) {
+    return res.status(404).json({
+      message: "Application not found"
+    });
+  }
+
+  res.status(200).json({
+    message: "Application deleted",
     data: application
   });
 };

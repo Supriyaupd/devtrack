@@ -1,3 +1,4 @@
+
 const API_URL = import.meta.env.VITE_API_URL
 
 export async function registerUser(
@@ -59,7 +60,6 @@ export async function getApplications(token: string) {
   return data
 }
 
-
 export async function createApplication(
   token: string,
   application: {
@@ -86,7 +86,6 @@ export async function createApplication(
   return data
 }
 
-
 export async function updateApplication(
   token: string,
   id: number,
@@ -109,6 +108,26 @@ export async function updateApplication(
 
   if (!response.ok) {
     throw new Error(data.message || 'Failed to update application')
+  }
+
+  return data
+}
+
+export async function deleteApplication(
+  token: string,
+  id: number
+) {
+  const response = await fetch(`${API_URL}/applications/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to delete application')
   }
 
   return data

@@ -44,3 +44,17 @@ export const updateApplication = async (
 
   return result.rows[0]
 }
+
+export const deleteApplication = async (
+  id: number,
+  userId: number
+) => {
+  const result = await pool.query(
+    `DELETE FROM applications
+     WHERE id = $1 AND user_id = $2
+     RETURNING *`,
+    [id, userId]
+  );
+
+  return result.rows[0];
+};
