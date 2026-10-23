@@ -25,3 +25,22 @@ export const createApplication = async (
 
   return result.rows[0];
 };
+
+
+export const updateApplication = async (
+  id: number,
+  company: string,
+  position: string,
+  status: string,
+  userId: number
+) => {
+  const result = await pool.query(
+    `UPDATE applications
+     SET company = $1, position = $2, status = $3
+     WHERE id = $4 AND user_id = $5
+     RETURNING *`,
+    [company, position, status, id, userId]
+  )
+
+  return result.rows[0]
+}

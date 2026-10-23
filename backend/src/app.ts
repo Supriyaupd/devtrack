@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -6,6 +7,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(logger);
 app.use("/api/applications", applicationRoutes);

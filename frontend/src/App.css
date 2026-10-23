@@ -1,0 +1,140 @@
+
+#root {
+  min-height: 100vh;
+}
+
+.dashboard {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  color: #1f2937;
+}
+
+.dashboard header {
+  margin-bottom: 32px;
+}
+
+.dashboard header h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+}
+
+.dashboard header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.summary article,
+.applications {
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.summary h2 {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.summary article p {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.applications h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+
+.applications p {
+  color: #6b7280;
+}
+
+@media (max-width: 700px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard {
+    padding: 24px 16px;
+  }
+
+  .summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.application-form {
+  margin-bottom: 32px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.application-form h2 {
+  margin-top: 0;
+  font-size: 22px;
+}
+
+.application-form form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: end;
+}
+
+.application-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.application-form input,
+.application-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  font: inherit;
+}
+
+.application-form button,
+.dashboard > button {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.application-form button:hover,
+.dashboard > button:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 700px) {
+  .application-form form {
+    grid-template-columns: 1fr;
+  }
+}

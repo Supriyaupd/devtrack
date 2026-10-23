@@ -322,3 +322,51 @@ describe("POST /api/applications validation", () => {
     );
   });
 });
+
+
+describe("PUT /api/applications/:id", () => {
+  it("updates an application belonging to the authenticated user", async () => {
+    const email = `update${Date.now()}@example.com`;
+    const password = "Test123";
+
+    await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "Update Test User",
+        email,
+        password,
+      });
+
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ email, password });
+
+    const token = login.body.token;
+
+    const created = await request(app)
+      .post("/api/applications")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        company: "Google",
+        position: "Software Engineer",
+        status: "applied",
+      });
+
+    const applicationId = created.body.data.id;
+
+    const response = await request(app)
+      .put(`/api/applications/${applicationId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        company: "Microsoft",
+        position: "Frontend Developer",
+        status: "interview",
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Application updated");
+    expect(response.body.data.company).toBe("Microsoft");
+    expect(response.body.data.position).toBe("Frontend Developer");
+    expect(response.body.data.status).toBe("interview");
+  });
+});
