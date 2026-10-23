@@ -26,7 +26,8 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/devtrack
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/devtrack"
+      JWT_SECRET: "ci-test-secret-only"
 
     steps:
       - uses: actions/checkout@v4
