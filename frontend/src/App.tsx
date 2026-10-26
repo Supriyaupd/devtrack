@@ -29,9 +29,13 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [authMessage, setAuthMessage] = useState('')
   const [applicationError, setApplicationError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!token) return
+    if (!token) {
+      setApplications([])
+      return
+    }
 
     getApplications(token)
       .then((result) => setApplications(result.data))
@@ -42,8 +46,7 @@ function App() {
     event: React.SyntheticEvent<HTMLFormElement>
   ) {
     event.preventDefault()
-
-    if (!token) return
+    if (!token || isSubmitting) return
 
     const form = event.currentTarget
     const formData = new FormData(form)
@@ -55,6 +58,7 @@ function App() {
     }
 
     setApplicationError('')
+    setIsSubmitting(true)
 
     try {
       if (editingApplication) {
@@ -83,6 +87,8 @@ function App() {
           ? error.message
           : 'Failed to save application'
       )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -99,7 +105,6 @@ function App() {
 
     try {
       await deleteApplication(token, id)
-
       setApplications((current) =>
         current.filter((app) => app.id !== id)
       )
@@ -118,6 +123,7 @@ function App() {
     event.preventDefault()
     setAuthError('')
     setAuthMessage('')
+    setIsSubmitting(true)
 
     const formData = new FormData(event.currentTarget)
     const email = String(formData.get('email')).trim()
@@ -134,7 +140,7 @@ function App() {
 
       if (isRegistering) {
         setIsRegistering(false)
-        setAuthMessage('Registration successful. Please log in.')
+        setAuthMessage('Account created successfully. Please log in.')
         return
       }
 
@@ -144,89 +150,245 @@ function App() {
       setAuthError(
         error instanceof Error ? error.message : 'Authentication failed'
       )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
+  function handleLogout() {
+    localStorage.removeItem('token')
+    setToken(null)
+    setApplications([])
+    setShowForm(false)
+    setEditingApplication(null)
+    setApplicationError('')
+  }
+
+  const interviewCount = applications.filter(
+    (app) => app.status === 'interview'
+  ).length
+
+  const offerCount = applications.filter(
+    (app) => app.status === 'offer'
+  ).length
+
+  const rejectionCount = applications.filter(
+    (app) => app.status === 'rejected'
+  ).length
+
+  function formatStatus(status: string) {
+    return status.charAt(0).toUpperCase() + status.slice(1)
+  }
+
   return (
-    <main className="dashboard">
+    <main className={`dashboard ${!token ? 'auth-layout' : ''}`}>
       {!token ? (
-        <section className="application-form">
-          <h2>{isRegistering ? 'Create Account' : 'Login'}</h2>
+        <section className="auth-panel">
+          <div className="brand-mark" aria-hidden="true">
+            D
+          </div>
 
-          {authError && <p>{authError}</p>}
-          {authMessage && <p>{authMessage}</p>}
+          <p className="eyebrow">YOUR CAREER, ORGANIZED</p>
+          <h1>{isRegistering ? 'Create your account' : 'Welcome back!'}</h1>
+          <p className="auth-description">
+            {isRegistering
+              ? 'Start keeping all your job applications in one place.'
+              : 'Your next opportunity starts here. Let’s pick up where you left off.'}
+          </p>
 
-          <form onSubmit={handleAuth}>
+          {authError && (
+            <p className="message error-message" role="alert">
+              {authError}
+            </p>
+          )}
+
+          {authMessage && (
+            <p className="message success-message" role="status">
+              {authMessage}
+            </p>
+          )}
+
+          <form className="auth-form" onSubmit={handleAuth}>
             {isRegistering && (
               <label>
-                Name
-                <input type="text" name="name" required />
+                Full name
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Your name"
+                  autoComplete="name"
+                  required
+                />
               </label>
             )}
 
             <label>
-              Email
-              <input type="email" name="email" required />
+              Email address
+              <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
             </label>
 
             <label>
               Password
-              <input type="password" name="password" required />
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                autoComplete={
+                  isRegistering ? 'new-password' : 'current-password'
+                }
+                required
+              />
             </label>
 
-            <button type="submit">
-              {isRegistering ? 'Register' : 'Login'}
+            <button
+              className="primary-button auth-submit"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? 'Please wait...'
+                : isRegistering
+                  ? 'Create account'
+                  : 'Log in to DevTrack'}
             </button>
           </form>
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegistering(!isRegistering)
-              setAuthError('')
-              setAuthMessage('')
-            }}
-          >
+          <p className="auth-switch">
             {isRegistering
-              ? 'Already have an account? Login'
-              : 'Create an account'}
-          </button>
+              ? 'Already have an account?'
+              : "Don't have an account yet?"}{' '}
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => {
+                setIsRegistering(!isRegistering)
+                setAuthError('')
+                setAuthMessage('')
+              }}
+            >
+              {isRegistering ? 'Log in' : 'Sign up'}
+            </button>
+          </p>
+
+          <p className="auth-footer">
+            One organized step closer to your next opportunity.
+          </p>
         </section>
       ) : (
         <>
-          <header>
-            <h1>DevTrack</h1>
-            <p>Track your job applications in one place.</p>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token')
-                setToken(null)
-                setApplications([])
-                setShowForm(false)
-                setEditingApplication(null)
-              }}
-            >
-              Logout
-            </button>
-          </header>
+          <div className="dashboard-heading">
+            <header className="welcome-header">
+              <div className="brand-line">
+                <div className="brand-mark small-mark" aria-hidden="true">
+                  D
+                </div>
+                <span>DevTrack</span>
+              </div>
+              <p className="eyebrow">YOUR CAREER DASHBOARD</p>
+              <h1>Your next chapter starts here.</h1>
+              <p className="welcome-description">
+                Keep track of your applications and celebrate every step
+                forward.
+              </p>
+            </header>
 
-          <button
-            onClick={() => {
-              setEditingApplication(null)
-              setApplicationError('')
-              setShowForm(!showForm)
-            }}
-          >
-            Add Application
-          </button>
+            <div className="dashboard-actions">
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setEditingApplication(null)
+                  setApplicationError('')
+                  setShowForm(!showForm)
+                }}
+              >
+                {showForm && !editingApplication
+                  ? 'Close form'
+                  : '+ Add application'}
+              </button>
+
+              <button className="secondary-button" onClick={handleLogout}>
+                Log out
+              </button>
+            </div>
+          </div>
+
+          <section className="summary" aria-label="Application summary">
+            <article className="summary-card total-card">
+              <div className="summary-icon" aria-hidden="true">
+                ↗
+              </div>
+              <h2>Total applications</h2>
+              <p>{applications.length}</p>
+              <span className="summary-note">Opportunities you're pursuing</span>
+            </article>
+
+            <article className="summary-card interview-card">
+              <div className="summary-icon" aria-hidden="true">
+                ✦
+              </div>
+              <h2>Interviews</h2>
+              <p>{interviewCount}</p>
+              <span className="summary-note">Chances to shine</span>
+            </article>
+
+            <article className="summary-card offer-card">
+              <div className="summary-icon" aria-hidden="true">
+                ✓
+              </div>
+              <h2>Offers</h2>
+              <p>{offerCount}</p>
+              <span className="summary-note">Great things ahead</span>
+            </article>
+
+            <article className="summary-card rejection-card">
+              <div className="summary-icon" aria-hidden="true">
+                ↻
+              </div>
+              <h2>Rejections</h2>
+              <p>{rejectionCount}</p>
+              <span className="summary-note">Keep moving forward</span>
+            </article>
+          </section>
 
           {showForm && (
             <section className="application-form">
-              <h2>
-                {editingApplication ? 'Edit Application' : 'New Application'}
-              </h2>
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">
+                    {editingApplication ? 'UPDATE DETAILS' : 'NEW OPPORTUNITY'}
+                  </p>
+                  <h2>
+                    {editingApplication
+                      ? 'Edit application'
+                      : 'Add an application'}
+                  </h2>
+                </div>
 
-              {applicationError && <p>{applicationError}</p>}
+                <button
+                  type="button"
+                  className="close-button"
+                  aria-label="Close application form"
+                  onClick={() => {
+                    setShowForm(false)
+                    setEditingApplication(null)
+                    setApplicationError('')
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {applicationError && (
+                <p className="message error-message" role="alert">
+                  {applicationError}
+                </p>
+              )}
 
               <form onSubmit={handleSubmit}>
                 <label>
@@ -241,7 +403,7 @@ function App() {
                 </label>
 
                 <label>
-                  Position
+                  Job title
                   <input
                     type="text"
                     name="position"
@@ -252,7 +414,7 @@ function App() {
                 </label>
 
                 <label>
-                  Status
+                  Application status
                   <select
                     name="status"
                     defaultValue={editingApplication?.status ?? 'applied'}
@@ -265,87 +427,125 @@ function App() {
                   </select>
                 </label>
 
-                <button type="submit">
-                  {editingApplication ? 'Update Application' : 'Save Application'}
-                </button>
-
-                {editingApplication && (
+                <div className="form-actions">
                   <button
+                    className="primary-button"
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting
+                      ? 'Saving...'
+                      : editingApplication
+                        ? 'Save changes'
+                        : 'Save application'}
+                  </button>
+
+                  <button
+                    className="secondary-button"
                     type="button"
                     onClick={() => {
+                      setShowForm(false)
                       setEditingApplication(null)
                       setApplicationError('')
-                      setShowForm(false)
                     }}
                   >
                     Cancel
                   </button>
-                )}
+                </div>
               </form>
             </section>
           )}
 
           {applicationError && !showForm && (
-            <p role="alert">{applicationError}</p>
+            <p className="message error-message" role="alert">
+              {applicationError}
+            </p>
           )}
 
-          <section className="summary">
-            <article>
-              <h2>Total Applications</h2>
-              <p>{applications.length}</p>
-            </article>
-
-            <article>
-              <h2>Interviews</h2>
-              <p>
-                {applications.filter((app) => app.status === 'interview').length}
-              </p>
-            </article>
-
-            <article>
-              <h2>Offers</h2>
-              <p>
-                {applications.filter((app) => app.status === 'offer').length}
-              </p>
-            </article>
-
-            <article>
-              <h2>Rejections</h2>
-              <p>
-                {applications.filter((app) => app.status === 'rejected').length}
-              </p>
-            </article>
-          </section>
-
           <section className="applications">
-            <h2>Your Applications</h2>
+            <div className="section-heading applications-heading">
+              <div>
+                <p className="eyebrow">YOUR JOB SEARCH</p>
+                <h2>Your applications</h2>
+                <p className="section-description">
+                  Every application is progress. Keep going!
+                </p>
+              </div>
+
+              <span className="count-pill">
+                {applications.length}{' '}
+                {applications.length === 1 ? 'application' : 'applications'}
+              </span>
+            </div>
 
             {applications.length === 0 ? (
-              <p>No applications to display yet.</p>
+              <div className="empty-state">
+                <div className="empty-icon" aria-hidden="true">
+                  ✦
+                </div>
+                <h3>Your journey starts here</h3>
+                <p>
+                  Add your first job application and keep all your opportunities
+                  organized in one place.
+                </p>
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    setEditingApplication(null)
+                    setApplicationError('')
+                    setShowForm(true)
+                  }}
+                >
+                  + Add your first application
+                </button>
+              </div>
             ) : (
-              applications.map((app) => (
-                <article key={app.id}>
-                  <h3>{app.company}</h3>
-                  <p>{app.position}</p>
-                  <p>Status: {app.status}</p>
+              <div className="application-list">
+                {applications.map((app) => (
+                  <article className="application-card" key={app.id}>
+                    <div className="company-avatar" aria-hidden="true">
+                      {app.company.trim().charAt(0).toUpperCase() || '?'}
+                    </div>
 
-                  <button
-                    onClick={() => {
-                      setEditingApplication(app)
-                      setApplicationError('')
-                      setShowForm(true)
-                    }}
-                  >
-                    Edit
-                  </button>
+                    <div className="application-details">
+                      <h3>{app.company}</h3>
+                      <p>{app.position}</p>
+                      <span
+                        className={`status-badge status-${app.status.toLowerCase()}`}
+                      >
+                        <span className="status-dot" />
+                        {formatStatus(app.status)}
+                      </span>
+                    </div>
 
-                  <button onClick={() => handleDelete(app.id)}>
-                    Delete
-                  </button>
-                </article>
-              ))
+                    <div className="application-actions">
+                      <button
+                        className="secondary-button"
+                        onClick={() => {
+                          setEditingApplication(app)
+                          setApplicationError('')
+                          setShowForm(true)
+                        }}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="delete-button"
+                        onClick={() => handleDelete(app.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
             )}
           </section>
+
+          <footer className="dashboard-footer">
+            <p>Built for your next big opportunity. Keep going!</p>
+          </footer>
         </>
       )}
     </main>
